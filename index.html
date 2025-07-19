@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'L5':  { s: [[[1,0,0],[1,0,0],[1,1,1]],[[1,1,1],[1,0,0],[1,0,0]],[[1,1,1],[0,0,1],[0,0,1]],[[0,0,1],[0,0,1],[1,1,1]],[[1,1,1,1],[1,0,0,0]],[[1,1,1,1],[0,0,0,1]],[[1,0],[1,0],[1,0],[1,1]],[[0,1],[0,1],[0,1],[1,1]]], c: 'var(--c1)' },
         },
         expanded: {
-            '2x3':   { s: [[[1,1,1],[1,1,1]], [[1,1],[1,1],[1,1]]], c: 'var(--c2)' },
+            '2x3':   { s: [[[1,1,1],[1,1,1]]], c: 'var(--c2)' },
             'T4':    { s: [[[0,1,0],[1,1,1]], [[1,0],[1,1],[1,0]], [[1,1,1],[0,1,0]], [[0,1],[1,1],[0,1]]], c: 'var(--c5)' },
             'Plus5': { s: [[[0,1,0],[1,1,1],[0,1,0]]], c: 'var(--c7)' },
             'C5':    { s: [[[1,1],[1,0],[1,1]], [[1,1,1],[1,0,1]], [[1,1],[0,1],[1,1]], [[1,0,1],[1,1,1]]], c: 'var(--c3)' },
@@ -895,7 +895,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pieceElement = document.createElement('div');
         pieceElement.classList.add('piece');
         pieceElement.id = id;
-        pieceElement.draggable = true;
 
         const rows = shape.length;
         const cols = shape[0].length;
@@ -939,23 +938,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             c: parseInt(pieceCellEl.dataset.c, 10)
         };
 
-        if (e.type === 'touchstart') {
-            e.preventDefault();
-            floatingPiece = draggedPieceInfo.element.cloneNode(true);
-            floatingPieceContainer.appendChild(floatingPiece);
-            
-            const pieceRect = draggedPieceInfo.element.getBoundingClientRect();
-            const floatingPieceWidth = pieceRect.width / draggedPieceInfo.shape[0].length;
-            const floatingPieceHeight = pieceRect.height / draggedPieceInfo.shape.length;
+        e.preventDefault(); // Предотвращаем стандартное поведение для мыши и тача
+        
+        floatingPiece = draggedPieceInfo.element.cloneNode(true);
+        floatingPieceContainer.appendChild(floatingPiece);
+        
+        const pieceRect = draggedPieceInfo.element.getBoundingClientRect();
+        const floatingPieceWidth = pieceRect.width / draggedPieceInfo.shape[0].length;
+        const floatingPieceHeight = pieceRect.height / draggedPieceInfo.shape.length;
 
-            floatingPiece.style.left = `-${(draggedPieceInfo.touchOffset.c + 0.5) * floatingPieceWidth}px`;
-            floatingPiece.style.top = `-${(draggedPieceInfo.touchOffset.r + 0.5) * floatingPieceHeight + FLOATING_PIECE_Y_OFFSET}px`;
+        floatingPiece.style.left = `-${(draggedPieceInfo.touchOffset.c + 0.5) * floatingPieceWidth}px`;
+        floatingPiece.style.top = `-${(draggedPieceInfo.touchOffset.r + 0.5) * floatingPieceHeight + FLOATING_PIECE_Y_OFFSET}px`;
 
-            onDragMove(e);
-            draggedPieceInfo.element.style.opacity = '0.3';
-        } else {
-            setTimeout(() => { pieceEl.style.opacity = '0.5'; }, 0);
-        }
+        onDragMove(e);
+        draggedPieceInfo.element.style.opacity = '0.3';
     }
 
     function onDragMove(e) {
@@ -999,8 +995,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (floatingPiece) {
             floatingPieceContainer.innerHTML = '';
             floatingPiece = null;
-            draggedPieceInfo.element.style.opacity = '1';
-        } else {
             draggedPieceInfo.element.style.opacity = '1';
         }
 
@@ -1338,13 +1332,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (action === 'end-game-confirm') { closeAllModals(); confirmEndGame('no_moves'); }
         });
         
-        document.addEventListener('dragstart', onDragStart);
-        document.addEventListener('dragend', onDragEnd);
-        document.addEventListener('dragover', onDragMove);
-
+        // --- УНИФИЦИРОВАННЫЙ DRAG & DROP ---
+        document.addEventListener('mousedown', onDragStart);
+        document.addEventListener('mousemove', onDragMove);
+        document.addEventListener('mouseup', onDragEnd);
+        
         document.addEventListener('touchstart', onDragStart, { passive: false });
         document.addEventListener('touchmove', onDragMove, { passive: false });
         document.addEventListener('touchend', onDragEnd);
+
+        // Блокировка контекстного меню
+        document.addEventListener('contextmenu', e => e.preventDefault());
         
         window.addEventListener('resize', () => {
             if (!gameState.isGameOver && !gameState.isPaused) {
