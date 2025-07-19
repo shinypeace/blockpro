@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Блок Про</title>
+    <!-- VK Bridge -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И СТИЛИ --- */
+        :root {
+            --light-bg: #eef1f5;
+            --light-card-bg: #ffffff;
+            --light-grid-bg: #dbe0e8;
+            --light-grid-cell-bg: #eef1f5;
+            --light-text-primary: #1a202c;
+            --light-text-secondary: #718096;
+            --light-shadow: rgba(0, 0, 0, 0.1);
+
+            --dark-bg: #1a202c;
+            --dark-card-bg: #2d3748;
+            --dark-grid-bg: #171923;
+            --dark-grid-cell-bg: #2d3748;
+            --dark-text-primary: #edf2f7;
+            --dark-text-secondary: #a0aec0;
+            --dark-shadow: rgba(0, 0, 0, 0.2);
+
+            --primary-grad-start: #4a90e2;
+            --primary-grad-end: #50e3c2;
+            --danger-color: #f56565;
+            
+            --font-main: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        [data-theme="light"] {
+            --bg-color: var(--light-bg);
+            --card-bg: var(--light-card-bg);
+            --grid-bg: var(--light-grid-bg);
+            --grid-cell-bg: var(--light-grid-cell-bg);
+            --text-primary: var(--light-text-primary);
+            --text-secondary: var(--light-text-secondary);
+            --shadow-color: var(--light-shadow);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: var(--dark-bg);
+            --card-bg: var(--dark-card-bg);
+            --grid-bg: var(--dark-grid-bg);
+            --grid-cell-bg: var(--dark-grid-cell-bg);
+            --text-primary: var(--dark-text-primary);
+            --text-secondary: var(--dark-text-secondary);
+            --shadow-color: var(--dark-shadow);
+        }
+
+        /* --- НОВЫЕ ЦВЕТА БЛОКОВ --- */
+        :root {
+            --c1: #5e72e4; /* Синий */
+            --c2: #f5365c; /* Красный */
+            --c3: #2dce89; /* Зеленый */
+            --c4: #fb6340; /* Оранжевый */
+            --c5: #8965e0; /* Фиолетовый */
+            --c6: #ffd600; /* Желтый */
+            --c7: #11cdef; /* Голубой */
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* --- КОНТЕЙНЕРЫ --- */
+        .game-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            max-height: 800px;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px -5px var(--shadow-color);
+            padding: 20px;
+            transition: background-color 0.3s;
+        }
+
+        /* --- ОБЩИЕ КОМПОНЕНТЫ --- */
+        .btn {
+            font-family: var(--font-main);
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            color: white;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-grad-start), var(--primary-grad-end));
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .btn:disabled {
+            background: var(--grid-bg);
+            cursor: not-allowed;
+        }
+        .btn:disabled::before {
+            background: none;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--text-secondary);
+            color: var(--text-secondary);
+        }
+        .btn-secondary::before {
+            opacity: 0;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            color: white;
+            border-color: transparent;
+        }
+        .btn-secondary:hover:not(:disabled)::before {
+            opacity: 1;
+        }
+        .btn .icon { margin-right: 10px; }
+
+        /* --- ГЛАВНОЕ МЕНЮ --- */
+        #main-menu {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            gap: 20px;
+        }
+
+        .game-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, var(--primary-grad-start), var(--primary-grad-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .theme-switcher-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .theme-slider {
+            appearance: none;
+            width: 50px;
+            height: 28px;
+            background-color: var(--grid-bg);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .theme-slider::before {
+            content: '☀️';
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: white;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .theme-slider:checked {
+            background: linear-gradient(45deg, var(--primary-grad-start), var(--primary-grad-end));
+        }
+        .theme-slider:checked::before {
+            content: '🌙';
+            transform: translateX(22px);
+        }
+
+        /* --- ЭКРАН ИГРЫ --- */
+        #game-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        .score-box {
+            background-color: var(--bg-color);
+            padding: 8px 12px;
+            border-radius: 12px;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .score-box .label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+        .score-box #score, .score-box #highscore {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        #pause-btn, #quit-btn {
+            background: var(--bg-color);
+            border: none;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        /* --- ИГРОВОЕ ПОЛЕ --- */
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: var(--grid-bg);
+            border-radius: 16px;
+            gap: 3px;
+            padding: 3px;
+            position: relative;
+        }
+
+        .grid-cell {
+            background-color: var(--grid-cell-bg);
+            border-radius: 6px;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        
+        .grid-cell.filled-cell {
+            transition: transform 0.3s ease-out, background-color 0.3s, border-radius 0.3s;
+            transform: scale(1.05);
+        }
+        
+        .grid-cell.clearing {
+            transform: scale(0);
+            border-radius: 50%;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .grid-cell.preview {
+            opacity: 0.4;
+        }
+        
+        .bomb-cell {
+            position: relative;
+            background-color: #4a5568 !important;
+            animation: bomb-pulse 1s infinite;
+        }
+        .bomb-timer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 900;
+            font-size: calc(min(4vw, 20px));
+            text-shadow: 0 0 5px var(--danger-color);
+        }
+        @keyframes bomb-pulse {
+            0% { box-shadow: 0 0 0 0px #f5656599; }
+            70% { box-shadow: 0 0 0 10px #f5656500; }
+            100% { box-shadow: 0 0 0 0px #f5656500; }
+        }
+
+        /* --- ВРЕМЕННАЯ ШКАЛА --- */
+        #time-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: var(--grid-bg);
+            border-radius: 5px;
+            margin: 15px 0;
+            display: none;
+            overflow: hidden;
+        }
+        #time-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-grad-start), var(--primary-grad-end));
+            border-radius: 5px;
+            transition: width 0.2s linear;
+        }
+        
+        /* --- ОБЛАСТЬ БЛОКОВ --- */
+        #pieces-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: auto;
+            padding: 20px 0 10px 0;
+            flex-grow: 1;
+        }
+
+        .piece {
+            display: grid;
+            cursor: grab;
+            transition: transform 0.2s, opacity 0.2s;
+            touch-action: none; /* Для сенсорного управления */
+        }
+        .piece-cell {
+            width: 18px;
+            height: 18px;
+        }
+        .piece-cell.filled {
+            border-radius: 4px;
+            box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.25), 0 1px 2px rgba(0,0,0,0.15);
+        }
+        .piece.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        /* --- ПЛАВАЮЩИЙ БЛОК (ДЛЯ СЕНСОРА) --- */
+        #floating-piece-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            z-index: 2000;
+            pointer-events: none;
+        }
+        #floating-piece-container .piece {
+            position: absolute;
+            transform-origin: center center;
+            transform: scale(1.5); /* Увеличиваем для удобства */
+            opacity: 0.8;
+            will-change: transform;
+        }
+        
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center; align-items: center;
+            padding: 20px; z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            width: 100%; max-width: 380px;
+            text-align: center; display: flex;
+            flex-direction: column; gap: 15px;
+            background-color: var(--card-bg);
+            border-radius: 20px; padding: 24px;
+            box-shadow: 0 10px 30px -5px var(--shadow-color);
+        }
+        .modal-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 0; }
+        .modal-subtitle { font-size: 1rem; color: var(--text-secondary); margin-top: -10px; margin-bottom: 10px; }
+        
+        /* --- СТИЛИ ДЛЯ ПРАВИЛ --- */
+        .rules-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--grid-bg);
+            margin-bottom: 15px;
+        }
+        .tab-btn {
+            flex-grow: 1;
+            padding: 10px 5px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--primary-grad-start);
+        }
+        .tab-content {
+            display: none;
+            text-align: left;
+            line-height: 1.5;
+            min-height: 120px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .rules-illustration {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            color: var(--primary-grad-start);
+        }
+        .illustration-time-bar-container {
+            width: 80%; height: 15px; background-color: var(--grid-bg); border-radius: 8px; overflow: hidden;
+        }
+        .illustration-time-bar {
+            height: 100%; background: linear-gradient(90deg, var(--primary-grad-start), var(--primary-grad-end));
+            animation: deplete-bar 3s linear infinite;
+        }
+        @keyframes deplete-bar {
+            from { width: 100%; } to { width: 0%; }
+        }
+        .illustration-bomb {
+            width: 50px; height: 50px; background-color: #4a5568; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            color: white; font-size: 1.5rem; font-weight: 900;
+            animation: illustration-bomb-pulse 1.5s infinite;
+        }
+        @keyframes illustration-bomb-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 var(--danger-color); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px 5px #f5656555; }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 var(--danger-color); }
+        }
+        .illustration-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+        }
+        .illustration-grid .piece { transform: scale(0.8); }
+
+        /* --- СТИЛИ ДЛЯ СТАТИСТИКИ --- */
+        #stats-content .stat-card {
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        #stats-content .stat-card-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        #stats-content .stat-card-score {
+            font-weight: 900;
+            font-size: 2rem;
+            color: var(--primary-grad-start);
+        }
+
+        /* --- АДАПТИВНОСТЬ --- */
+        @media (max-height: 720px) {
+            .game-container { padding: 15px; max-height: 95vh; }
+            .top-bar { margin-bottom: 10px; }
+            #pieces-container { padding: 10px 0; }
+            .piece-cell { width: 16px; height: 16px; }
+            .btn { padding: 14px 18px; font-size: 1.1rem; border-radius: 12px; }
+            .game-title { font-size: 3rem; }
+        }
+        @media (max-width: 380px) {
+            .piece-cell { width: 14px; height: 14px; }
+            .game-title { font-size: 2.5rem; }
+            .score-box { padding: 6px 10px; }
+            .score-box #score, .score-box #highscore { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+
+            <!-- ГЛАВНОЕ МЕНЮ -->
+            <div id="main-menu">
+                <h1 class="game-title">Блок Про</h1>
+                <button id="play-btn" class="btn">Играть</button>
+                <button id="rules-btn" class="btn btn-secondary">Правила</button>
+                <button id="stats-btn" class="btn btn-secondary">Статистика</button>
+                <div class="theme-switcher-container">
+                    <input type="checkbox" id="theme-slider" class="theme-slider">
+                </div>
+            </div>
+
+            <!-- ИГРОВОЙ ЭКРАН -->
+            <div id="game-screen">
+                <div class="top-bar">
+                    <button id="quit-btn" title="Выйти в меню">🏠</button>
+                    <div class="score-box">
+                        <div class="label">РЕКОРД</div>
+                        <div id="highscore">0</div>
+                    </div>
+                    <div class="score-box">
+                        <div class="label">СЧЕТ</div>
+                        <div id="score">0</div>
+                    </div>
+                    <button id="pause-btn" title="Пауза">❚❚</button>
+                </div>
+                
+                <div id="time-bar-container"><div id="time-bar"></div></div>
+                <div id="game-grid"></div>
+                <div id="pieces-container"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- КОНТЕЙНЕР ДЛЯ ПЕРЕТАСКИВАНИЯ СЕНСОРОМ -->
+    <div id="floating-piece-container"></div>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    <div id="mode-selection-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Выберите режим</h2>
+            <button class="btn btn-secondary" data-mode="classic"><span class="icon">🏆</span>Классический</button>
+            <button class="btn btn-secondary" data-mode="time"><span class="icon">⏱️</span>На время</button>
+            <button class="btn btn-secondary" data-mode="bomb"><span class="icon">💣</span>Бомба</button>
+            <button class="btn btn-secondary" data-mode="expanded"><span class="icon">✨</span>Расширенный</button>
+            <button class="btn" data-action="close">Назад</button>
+        </div>
+    </div>
+    
+    <div id="pause-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Пауза</h2>
+            <button class="btn" data-action="resume">Продолжить</button>
+            <button class="btn btn-secondary" data-action="quit">Выйти в меню</button>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="game-over-title">Игра окончена!</h2>
+            <p class="modal-subtitle" id="game-over-reason"></p>
+            <p>Ваш счет: <strong id="final-score" style="font-size: 1.5em;">0</strong></p>
+            <button class="btn" data-action="restart">Начать заново</button>
+            <button class="btn btn-secondary" data-action="quit">Выйти в меню</button>
+        </div>
+    </div>
+    
+    <div id="revive-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Второй шанс?</h2>
+            <p class="modal-subtitle">Очистить часть поля и продолжить игру?</p>
+            <button class="btn" data-action="revive">Продолжить за ▶️</button>
+            <button class="btn btn-secondary" data-action="end-game-confirm">Завершить игру</button>
+        </div>
+    </div>
+
+    <div id="stats-modal" class="modal">
+        <div class="modal-content" id="stats-content">
+            <!-- Статистика будет заполнена JS -->
+        </div>
+    </div>
+
+    <div id="rules-modal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Правила игры</h2>
+            <div class="rules-tabs">
+                <button class="tab-btn active" data-tab="classic">Классика</button>
+                <button class="tab-btn" data-tab="time">Время</button>
+                <button class="tab-btn" data-tab="bomb">Бомба</button>
+                <button class="tab-btn" data-tab="expanded">Расширенный</button>
+            </div>
+            <div id="tab-classic" class="tab-content active">
+                <p>Размещайте фигуры на поле. Заполняйте горизонтальные или вертикальные линии, чтобы очистить их и заработать очки.</p>
+            </div>
+            <div id="tab-time" class="tab-content">
+                <p>Все как в классике, но сверху убывает полоска времени. Каждая убранная линия немного пополняет время.</p>
+                <div class="rules-illustration">
+                    <div class="illustration-time-bar-container"><div class="illustration-time-bar"></div></div>
+                </div>
+            </div>
+            <div id="tab-bomb" class="tab-content">
+                <p>Периодически на поле появляются бомбы с таймером. Уберите бомбу, собрав линию, в которой она находится, иначе она взорвется!</p>
+                <div class="rules-illustration">
+                    <div class="illustration-bomb">10</div>
+                </div>
+            </div>
+            <div id="tab-expanded" class="tab-content">
+                <p>Классический режим с дополнительными, более сложными фигурами. Настоящее испытание!</p>
+                <div class="rules-illustration">
+                    <div id="expanded-rules-grid" class="illustration-grid"></div>
+                </div>
+            </div>
+            <button class="btn" data-action="close">Понятно</button>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // --- ОПРЕДЕЛЕНИЕ БЛОКОВ С УНИКАЛЬНЫМИ ЦВЕТАМИ ---
+    const BLOCKS = {
+        classic: {
+            '1x1': { s: [[[1]]], c: 'var(--c1)' }, 
+            '1x2': { s: [[[1, 1]], [[1], [1]]], c: 'var(--c2)' },
+            '1x3': { s: [[[1, 1, 1]], [[1], [1], [1]]], c: 'var(--c3)' }, 
+            '1x4': { s: [[[1, 1, 1, 1]], [[1], [1], [1], [1]]], c: 'var(--c4)' },
+            '1x5': { s: [[[1, 1, 1, 1, 1]], [[1], [1], [1], [1], [1]]], c: 'var(--c5)' },
+            '2x2': { s: [[[1, 1], [1, 1]]], c: 'var(--c6)' }, 
+            '3x3': { s: [[[1, 1, 1], [1, 1, 1], [1, 1, 1]]], c: 'var(--c7)' },
+            'L3':  { s: [[[1, 0], [1, 1]], [[1, 1], [1, 0]], [[1, 1], [0, 1]], [[0, 1], [1, 1]]], c: 'var(--c5)' },
+            'L5':  { s: [[[1,0,0],[1,0,0],[1,1,1]],[[1,1,1],[1,0,0],[1,0,0]],[[1,1,1],[0,0,1],[0,0,1]],[[0,0,1],[0,0,1],[1,1,1]],[[1,1,1,1],[1,0,0,0]],[[1,1,1,1],[0,0,0,1]],[[1,0],[1,0],[1,0],[1,1]],[[0,1],[0,1],[0,1],[1,1]]], c: 'var(--c1)' },
+        },
+        expanded: {
+            '2x3':   { s: [[[1,1,1],[1,1,1]], [[1,1],[1,1],[1,1]]], c: 'var(--c2)' },
+            'T4':    { s: [[[0,1,0],[1,1,1]], [[1,0],[1,1],[1,0]], [[1,1,1],[0,1,0]], [[0,1],[1,1],[0,1]]], c: 'var(--c5)' },
+            'Plus5': { s: [[[0,1,0],[1,1,1],[0,1,0]]], c: 'var(--c7)' },
+            'C5':    { s: [[[1,1],[1,0],[1,1]], [[1,1,1],[1,0,1]], [[1,1],[0,1],[1,1]], [[1,0,1],[1,1,1]]], c: 'var(--c3)' },
+            'S5':    { s: [[[0,1,1],[1,1,0]], [[1,0],[1,1],[0,1]]], c: 'var(--c6)' }
+        }
+    };
+    const allExpandedBlocks = {...BLOCKS.classic, ...BLOCKS.expanded};
+
+    // --- DOM Элементы ---
+    const gridEl = document.getElementById('game-grid');
+    const piecesContainer = document.getElementById('pieces-container');
+    const scoreDisplay = document.getElementById('score');
+    const highscoreDisplay = document.getElementById('highscore');
+    const floatingPieceContainer = document.getElementById('floating-piece-container');
+    
+    // --- Состояние игры ---
+    const GRID_SIZE = 8;
+    const FLOATING_PIECE_Y_OFFSET = 60; 
+    let gameState = {
+        gridState: [], score: 0, currentPieces: [], gameMode: 'classic',
+        isPaused: false, isGameOver: false, stats: {}, reviveUsed: false,
+        timerId: null, timeRemaining: 100, bombCounter: 0, bombs: [],
+        gamesPlayedSinceAd: 0, vkUserId: null
+    };
+    let gridRect = null;
+
+    // --- Инициализация VK ---
+    async function initVK() {
+        try {
+            await vkBridge.send('VKWebAppInit');
+            const user = await vkBridge.send('VKWebAppGetUserInfo');
+            gameState.vkUserId = user.id;
+        } catch (error) {
+            console.warn('VK Bridge not available. Using localStorage.');
+            gameState.vkUserId = localStorage.getItem('blockPuzzleGuestId') || `guest_${Date.now()}`;
+            localStorage.setItem('blockPuzzleGuestId', gameState.vkUserId);
+        }
+        await loadStats(); // Загружаем статистику после получения ID
+        showMainMenu();
+    }
+    
+    // --- Инициализация ---
+    async function init() {
+        setupEventListeners();
+        createGrid();
+        setupTheme();
+        populateExpandedRules();
+        await initVK(); // Запускаем инициализацию VK
+    }
+    
+    function createGrid() {
+        gridEl.innerHTML = '';
+        for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('grid-cell');
+            cell.dataset.row = Math.floor(i / GRID_SIZE);
+            cell.dataset.col = i % GRID_SIZE;
+            gridEl.appendChild(cell);
+        }
+    }
+
+    // --- Управление игрой ---
+    function startGame(mode) {
+        gameState = { ...gameState, gridState: Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(null)),
+            score: 0, isGameOver: false, isPaused: false, gameMode: mode, bombs: [], bombCounter: 0, reviveUsed: false };
+
+        scoreDisplay.textContent = '0';
+        highscoreDisplay.textContent = gameState.stats[mode] || 0;
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
+        
+        const timeBarContainer = document.getElementById('time-bar-container');
+        if (mode === 'time') {
+            timeBarContainer.style.display = 'block';
+            startTimer();
+        } else {
+            timeBarContainer.style.display = 'none';
+            if (gameState.timerId) clearInterval(gameState.timerId);
+        }
+        
+        clearAllCells();
+        generateNewPieces();
+        updatePiecesAvailability();
+        setTimeout(() => { gridRect = gridEl.getBoundingClientRect(); }, 100);
+        vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
+    }
+    
+    function confirmEndGame(reason = '') {
+        gameState.isGameOver = true;
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        updateStats();
+        
+        const titleEl = document.getElementById('game-over-title');
+        const reasonEl = document.getElementById('game-over-reason');
+        
+        if (reason === 'no_moves') {
+            titleEl.textContent = 'Ходов не осталось!';
+            reasonEl.textContent = 'Не удалось разместить ни одну из фигур.';
+        } else {
+            titleEl.textContent = 'Игра окончена!';
+            reasonEl.textContent = '';
+        }
+        
+        document.getElementById('final-score').textContent = gameState.score;
+        document.getElementById('game-over-modal').classList.add('active');
+        
+        // Показ межстраничной рекламы
+        gameState.gamesPlayedSinceAd++;
+        if (gameState.gamesPlayedSinceAd >= 3) {
+            vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
+                .then(() => gameState.gamesPlayedSinceAd = 0)
+                .catch(e => console.error(e));
+        }
+    }
+
+    function handleGameOver(reason = '') {
+        if (gameState.isGameOver) return;
+        gameState.isGameOver = true;
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        
+        if (!gameState.reviveUsed) {
+            document.getElementById('revive-modal').classList.add('active');
+        } else {
+            confirmEndGame(reason);
+        }
+    }
+
+    async function revive() {
+        try {
+            const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' });
+            if (adResult.result) {
+                gameState.reviveUsed = true;
+                
+                const indices = Array.from(Array(GRID_SIZE).keys());
+                const rowsToClear = indices.sort(() => 0.5 - Math.random()).slice(0, 3);
+                const colsToClear = indices.sort(() => 0.5 - Math.random()).slice(0, 3);
+
+                rowsToClear.forEach(r => { for(let c=0;c<GRID_SIZE;c++) getCell(r,c).classList.add('clearing'); });
+                colsToClear.forEach(c => { for(let r=0;r<GRID_SIZE;r++) getCell(r,c).classList.add('clearing'); });
+
+                setTimeout(() => {
+                    rowsToClear.forEach(r => { for (let c=0;c<GRID_SIZE;c++) clearCell(r,c); });
+                    colsToClear.forEach(c => { for (let r=0;r<GRID_SIZE;r++) clearCell(r,c); });
+                    
+                    gameState.isGameOver = false;
+                    if (gameState.gameMode === 'time') {
+                        gameState.timeRemaining = Math.max(gameState.timeRemaining, 50); // Даем время
+                        runTimer();
+                    }
+                    postTurnLogic();
+                }, 400);
+            }
+        } catch (e) {
+            console.error('Rewarded Ad error:', e);
+        }
+    }
+
+    function showMainMenu() {
+        document.getElementById('main-menu').style.display = 'flex';
+        document.getElementById('game-screen').style.display = 'none';
+        closeAllModals();
+        vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
+    }
+
+    function pauseGame(showModal = true) {
+        if (gameState.isGameOver) return;
+        gameState.isPaused = true;
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        if (showModal) document.getElementById('pause-modal').classList.add('active');
+    }
+
+    function resumeGame() {
+        gameState.isPaused = false;
+        if (gameState.gameMode === 'time') runTimer();
+        document.getElementById('pause-modal').classList.remove('active');
+    }
+    
+    function closeAllModals() {
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+    }
+
+    // --- Логика блоков ---
+    function generateNewPieces() {
+        piecesContainer.innerHTML = '';
+        gameState.currentPieces = [];
+        
+        const pieceSet = (gameState.gameMode === 'expanded') ? allExpandedBlocks : BLOCKS.classic;
+        const pieceKeys = Object.keys(pieceSet);
+
+        for (let i = 0; i < 3; i++) {
+            const randomKey = pieceKeys[Math.floor(Math.random() * pieceKeys.length)];
+            const pieceData = pieceSet[randomKey];
+            const randomShapeIndex = Math.floor(Math.random() * pieceData.s.length);
+            const shape = pieceData.s[randomShapeIndex];
+            
+            const pieceInfo = {
+                id: `p${Date.now()}${i}`, shape: shape, color: pieceData.c,
+                element: createPieceElement(shape, pieceData.c, `p${Date.now()}${i}`),
+                size: shape.flat().reduce((a, b) => a + b, 0)
+            };
+            
+            gameState.currentPieces.push(pieceInfo);
+            piecesContainer.appendChild(pieceInfo.element);
+        }
+    }
+
+    function createPieceElement(shape, color, id) {
+        const pieceElement = document.createElement('div');
+        pieceElement.classList.add('piece');
+        pieceElement.id = id;
+        pieceElement.draggable = true;
+
+        const rows = shape.length;
+        const cols = shape[0].length;
+        pieceElement.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        pieceElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cell = document.createElement('div');
+                cell.classList.add('piece-cell');
+                cell.dataset.r = r;
+                cell.dataset.c = c;
+                if (shape[r][c] === 1) {
+                    cell.classList.add('filled');
+                    cell.style.backgroundColor = color;
+                }
+                pieceElement.appendChild(cell);
+            }
+        }
+        return pieceElement;
+    }
+
+    // --- УЛУЧШЕННЫЙ Drag & Drop и Touch ---
+    let draggedPieceInfo = null;
+    let floatingPiece = null;
+    
+    function getCoordsFromEvent(e) { return e.touches ? e.touches[0] : e; }
+
+    function onDragStart(e) {
+        const pieceCellEl = e.target.closest('.piece-cell');
+        if (!pieceCellEl) return;
+        
+        const pieceEl = pieceCellEl.closest('.piece');
+        if (!pieceEl || pieceEl.classList.contains('disabled')) return;
+        
+        draggedPieceInfo = gameState.currentPieces.find(p => p.id === pieceEl.id);
+        if (!draggedPieceInfo) return;
+        
+        draggedPieceInfo.touchOffset = {
+            r: parseInt(pieceCellEl.dataset.r, 10),
+            c: parseInt(pieceCellEl.dataset.c, 10)
+        };
+
+        if (e.type === 'touchstart') {
+            e.preventDefault();
+            floatingPiece = draggedPieceInfo.element.cloneNode(true);
+            floatingPieceContainer.appendChild(floatingPiece);
+            
+            const pieceRect = draggedPieceInfo.element.getBoundingClientRect();
+            const floatingPieceWidth = pieceRect.width / draggedPieceInfo.shape[0].length;
+            const floatingPieceHeight = pieceRect.height / draggedPieceInfo.shape.length;
+
+            floatingPiece.style.left = `-${(draggedPieceInfo.touchOffset.c + 0.5) * floatingPieceWidth}px`;
+            floatingPiece.style.top = `-${(draggedPieceInfo.touchOffset.r + 0.5) * floatingPieceHeight + FLOATING_PIECE_Y_OFFSET}px`;
+
+            onDragMove(e);
+            draggedPieceInfo.element.style.opacity = '0.3';
+        } else {
+            setTimeout(() => { pieceEl.style.opacity = '0.5'; }, 0);
+        }
+    }
+
+    function onDragMove(e) {
+        if (!draggedPieceInfo) return;
+        e.preventDefault();
+
+        const coords = getCoordsFromEvent(e);
+        
+        if (floatingPiece) {
+            floatingPieceContainer.style.transform = `translate(${coords.clientX}px, ${coords.clientY}px)`;
+        }
+        
+        const shadowCheckX = coords.clientX;
+        const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
+
+        const { row, col } = getGridCoordsFromScreen(shadowCheckX, shadowCheckY);
+        
+        const previewRow = row - draggedPieceInfo.touchOffset.r;
+        const previewCol = col - draggedPieceInfo.touchOffset.c;
+
+        drawPreview(previewRow, previewCol, draggedPieceInfo.shape, draggedPieceInfo.color);
+    }
+
+    function onDragEnd(e) {
+        if (!draggedPieceInfo) return;
+        
+        const coords = e.changedTouches ? e.changedTouches[0] : e;
+        
+        const shadowCheckX = coords.clientX;
+        const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
+        
+        const { row, col } = getGridCoordsFromScreen(shadowCheckX, shadowCheckY);
+        
+        const finalRow = row - draggedPieceInfo.touchOffset.r;
+        const finalCol = col - draggedPieceInfo.touchOffset.c;
+
+        if (row !== -1 && col !== -1) {
+            placePiece(finalRow, finalCol, draggedPieceInfo);
+        }
+        
+        if (floatingPiece) {
+            floatingPieceContainer.innerHTML = '';
+            floatingPiece = null;
+            draggedPieceInfo.element.style.opacity = '1';
+        } else {
+            draggedPieceInfo.element.style.opacity = '1';
+        }
+
+        clearPreview();
+        draggedPieceInfo = null;
+    }
+
+    function getGridCoordsFromScreen(screenX, screenY) {
+        if (!gridRect) return { row: -1, col: -1 };
+        
+        let x = screenX - gridRect.left;
+        let y = screenY - gridRect.top;
+
+        x = Math.max(0, Math.min(x, gridRect.width));
+        y = Math.max(0, Math.min(y, gridRect.height));
+
+        const col = Math.min(GRID_SIZE - 1, Math.floor(x / (gridRect.width / GRID_SIZE)));
+        const row = Math.min(GRID_SIZE - 1, Math.floor(y / (gridRect.height / GRID_SIZE)));
+
+        return { row, col };
+    }
+
+    function drawPreview(startRow, startCol, shape, color) {
+        clearPreview();
+        if (canPlace(startRow, startCol, shape)) {
+            shape.forEach((row, r) => {
+                row.forEach((cell, c) => {
+                    if (cell) {
+                        const gridCell = getCell(startRow + r, startCol + c);
+                        if (gridCell && !gridCell.classList.contains('filled-cell')) {
+                            gridCell.classList.add('preview');
+                            gridCell.style.backgroundColor = color;
+                        }
+                    }
+                });
+            });
+        }
+    }
+    
+    function clearPreview() {
+        document.querySelectorAll('.grid-cell.preview').forEach(cell => {
+            cell.classList.remove('preview');
+            if (!cell.classList.contains('filled-cell')) {
+               cell.style.backgroundColor = '';
+            }
+        });
+    }
+
+    // --- Логика игры ---
+    function canPlace(startRow, startCol, shape) {
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[0].length; c++) {
+                if (shape[r][c]) {
+                    const boardRow = startRow + r;
+                    const boardCol = startCol + c;
+                    if (boardRow >= GRID_SIZE || boardCol >= GRID_SIZE || boardRow < 0 || boardCol < 0 || gameState.gridState[boardRow][boardCol]) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    
+    function placePiece(startRow, startCol, piece) {
+        if (!canPlace(startRow, startCol, piece.shape)) return;
+        
+        piece.shape.forEach((row, r) => {
+            row.forEach((cell, c) => {
+                if (cell) {
+                    const boardRow = startRow + r;
+                    const boardCol = startCol + c;
+                    gameState.gridState[boardRow][boardCol] = { color: piece.color };
+                    const gridCell = getCell(boardRow, boardCol);
+                    gridCell.style.backgroundColor = piece.color;
+                    gridCell.classList.add('filled-cell');
+                }
+            });
+        });
+        
+        updateScore(piece.size);
+        piece.element.remove();
+        gameState.currentPieces = gameState.currentPieces.filter(p => p.id !== piece.id);
+        
+        checkLineClears();
+    }
+
+    function postTurnLogic() {
+        if (gameState.gameMode === 'bomb') processBombTimers();
+        
+        if (gameState.currentPieces.length === 0) {
+            generateNewPieces();
+        }
+        updatePiecesAvailability();
+        checkGameOver();
+    }
+    
+    function checkLineClears() {
+        let rowsToClear = [], colsToClear = [];
+        for (let r = 0; r < GRID_SIZE; r++) if (gameState.gridState[r].every(c => c)) rowsToClear.push(r);
+        for (let c = 0; c < GRID_SIZE; c++) if (gameState.gridState.every(r => r[c])) colsToClear.push(c);
+        
+        const linesCleared = rowsToClear.length + colsToClear.length;
+        if (linesCleared > 0) {
+            // Убираем бомбы до анимации
+            gameState.bombs = gameState.bombs.filter(b => !rowsToClear.includes(b.row) && !colsToClear.includes(b.col));
+            
+            rowsToClear.forEach(r => { for(let c=0;c<GRID_SIZE;c++) getCell(r,c).classList.add('clearing'); });
+            colsToClear.forEach(c => { for(let r=0;r<GRID_SIZE;r++) getCell(r,c).classList.add('clearing'); });
+            
+            updateScore(10 * linesCleared * linesCleared);
+            if (gameState.gameMode === 'time') {
+                gameState.timeRemaining = Math.min(100, gameState.timeRemaining + linesCleared * 5);
+                document.getElementById('time-bar').style.width = gameState.timeRemaining + '%';
+            }
+            
+            setTimeout(() => {
+                rowsToClear.forEach(r => { for (let c=0;c<GRID_SIZE;c++) clearCell(r,c); });
+                colsToClear.forEach(c => { for (let r=0;r<GRID_SIZE;r++) clearCell(r,c); });
+                postTurnLogic();
+            }, 400);
+        } else {
+            postTurnLogic();
+        }
+    }
+
+    function checkGameOver() {
+        if (gameState.isGameOver) return;
+        const canMove = gameState.currentPieces.some(piece => {
+            return !piece.element.classList.contains('disabled');
+        });
+
+        if (!canMove) {
+            setTimeout(() => handleGameOver('no_moves'), 500);
+        }
+    }
+    
+    function updatePiecesAvailability() {
+        gameState.currentPieces.forEach(piece => {
+            let canBePlaced = false;
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (canPlace(r, c, piece.shape)) {
+                        canBePlaced = true; break;
+                    }
+                }
+                if (canBePlaced) break;
+            }
+            piece.element.classList.toggle('disabled', !canBePlaced);
+        });
+    }
+
+    // --- Логика режимов ---
+    function processBombTimers() {
+        let bombExploded = false;
+        gameState.bombs.forEach(b => { 
+            if (b.timer > 0) {
+                b.timer--;
+                if (b.timer === 0) bombExploded = true;
+            }
+        });
+        updateBombTimers();
+        if (bombExploded) {
+            handleGameOver();
+            return;
+        }
+        if (++gameState.bombCounter % 10 === 0) addBomb();
+    }
+
+    function addBomb() {
+        const emptyCells = [];
+        for (let r=0;r<GRID_SIZE;r++) for (let c=0;c<GRID_SIZE;c++) if (!gameState.gridState[r][c]) emptyCells.push({r,c});
+        if (emptyCells.length > 0) {
+            const {r, c} = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            const newBomb = { row: r, col: c, timer: 10 };
+            gameState.bombs.push(newBomb);
+            gameState.gridState[r][c] = { type: 'bomb', timer: 10 };
+            const cell = getCell(r, c);
+            cell.classList.add('bomb-cell');
+            cell.innerHTML = `<span class="bomb-timer">10</span>`;
+        }
+    }
+    function updateBombTimers() {
+        gameState.bombs.forEach(b => {
+            const cell = getCell(b.row, b.col);
+            if(cell && cell.querySelector('.bomb-timer')) {
+                cell.querySelector('.bomb-timer').textContent = b.timer;
+                if(b.timer <= 3 && b.timer > 0) cell.querySelector('.bomb-timer').style.color = 'var(--danger-color)';
+            }
+        });
+    }
+    
+    function startTimer() {
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        gameState.timeRemaining = 100;
+        document.getElementById('time-bar').style.width = '100%';
+        runTimer();
+    }
+
+    function runTimer() {
+        if (gameState.timerId) clearInterval(gameState.timerId);
+        gameState.timerId = setInterval(() => {
+            if (gameState.isPaused || gameState.isGameOver) {
+                clearInterval(gameState.timerId);
+                return;
+            }
+            gameState.timeRemaining -= 0.1; // Замедленный таймер
+            document.getElementById('time-bar').style.width = gameState.timeRemaining + '%';
+            if (gameState.timeRemaining <= 0) {
+                clearInterval(gameState.timerId);
+                handleGameOver('time_out');
+            }
+        }, 100);
+    }
+    
+    // --- Вспомогательные функции ---
+    function updateScore(points) { gameState.score += points; scoreDisplay.textContent = gameState.score; }
+    function getCell(row, col) { if (row<0||row>=GRID_SIZE||col<0||col>=GRID_SIZE) return null; return gridEl.children[row*GRID_SIZE+col]; }
+    function clearCell(row, col) {
+        const cell = getCell(row, col);
+        if (cell) {
+            cell.style.backgroundColor = '';
+            cell.className = 'grid-cell';
+            cell.innerHTML = '';
+        }
+        gameState.gridState[row][col] = null;
+    }
+    function clearAllCells() { for(let r=0;r<GRID_SIZE;r++) for(let c=0;c<GRID_SIZE;c++) clearCell(r,c); }
+
+    // --- Статистика и Хранилище (VK) ---
+    async function loadStats() {
+        const storageKey = `blockPuzzleProStats_${gameState.vkUserId}`;
+        let data = null;
+        try {
+            const response = await vkBridge.send('VKWebAppStorageGet', { keys: [storageKey] });
+            if (response.keys[0]?.value) {
+                data = response.keys[0].value;
+            }
+        } catch (error) {
+            data = localStorage.getItem(storageKey);
+        }
+        gameState.stats = data ? JSON.parse(data) : { classic: 0, time: 0, bomb: 0, expanded: 0 };
+    }
+
+    async function updateStats() {
+        const { gameMode, score, stats, vkUserId } = gameState;
+        if (score > (stats[gameMode] || 0)) {
+            stats[gameMode] = score;
+            const storageKey = `blockPuzzleProStats_${vkUserId}`;
+            const dataToSave = JSON.stringify(stats);
+            try {
+                await vkBridge.send('VKWebAppStorageSet', { key: storageKey, value: dataToSave });
+            } catch (error) {
+                localStorage.setItem(storageKey, dataToSave);
+            }
+            highscoreDisplay.textContent = score;
+        }
+    }
+
+    function displayStats() {
+        const content = document.getElementById('stats-content');
+        content.innerHTML = '<h2 class="modal-title">Статистика</h2>';
+        const modes = { classic: '🏆 Классический', time: '⏱️ На время', bomb: '💣 Бомба', expanded: '✨ Расширенный' };
+        for (const mode in modes) {
+            const score = gameState.stats[mode] || 0;
+            const card = `
+                <div class="stat-card">
+                    <div class="stat-card-title">${modes[mode]}</div>
+                    <div class="stat-card-score">${score}</div>
+                </div>
+            `;
+            content.innerHTML += card;
+        }
+        content.innerHTML += '<button class="btn btn-secondary" data-action="close">Закрыть</button>';
+        document.getElementById('stats-modal').classList.add('active');
+    }
+    
+    function populateExpandedRules() {
+        const grid = document.getElementById('expanded-rules-grid');
+        grid.innerHTML = '';
+        Object.keys(BLOCKS.expanded).forEach(key => {
+            const pieceData = BLOCKS.expanded[key];
+            const pieceEl = createPieceElement(pieceData.s[0], pieceData.c, `rule-${key}`);
+            grid.appendChild(pieceEl);
+        });
+    }
+
+    // --- Управление темой ---
+    function setupTheme() {
+        const slider = document.getElementById('theme-slider');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        slider.checked = (savedTheme === 'dark');
+        slider.addEventListener('change', () => {
+            const newTheme = slider.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    }
+
+    // --- Обработчики событий ---
+    function setupEventListeners() {
+        document.getElementById('play-btn').addEventListener('click', () => document.getElementById('mode-selection-modal').classList.add('active'));
+        document.getElementById('stats-btn').addEventListener('click', displayStats);
+        document.getElementById('pause-btn').addEventListener('click', () => pauseGame());
+        document.getElementById('quit-btn').addEventListener('click', showMainMenu);
+        document.getElementById('rules-btn').addEventListener('click', () => {
+            document.getElementById('rules-modal').classList.add('active');
+        });
+
+        document.querySelector('.rules-tabs').addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-btn')) {
+                const tabId = e.target.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+            }
+        });
+        
+        document.body.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-mode], [data-action]');
+            if (!target) return;
+            
+            const action = target.dataset.action;
+            if (target.dataset.mode) { startGame(target.dataset.mode); closeAllModals(); }
+            if (action === 'close') closeAllModals();
+            if (action === 'resume') resumeGame();
+            if (action === 'quit') showMainMenu();
+            if (action === 'restart') { closeAllModals(); startGame(gameState.gameMode); }
+            if (action === 'revive') { closeAllModals(); revive(); }
+            if (action === 'end-game-confirm') { closeAllModals(); confirmEndGame('no_moves'); }
+        });
+        
+        document.addEventListener('dragstart', onDragStart);
+        document.addEventListener('dragend', onDragEnd);
+        document.addEventListener('dragover', onDragMove);
+
+        document.addEventListener('touchstart', onDragStart, { passive: false });
+        document.addEventListener('touchmove', onDragMove, { passive: false });
+        document.addEventListener('touchend', onDragEnd);
+        
+        window.addEventListener('resize', () => {
+            if (!gameState.isGameOver && !gameState.isPaused) {
+                gridRect = gridEl.getBoundingClientRect();
+            }
+        });
+    }
+    
+    init();
+});
+</script>
+
+</body>
+</html>
+
