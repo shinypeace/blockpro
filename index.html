@@ -496,11 +496,23 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 var(--danger-color); }
         }
         .illustration-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+        }
+        .illustration-grid .piece-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .illustration-grid .piece { transform: scale(0.8); }
 
         /* --- СТИЛИ ДЛЯ СТАТИСТИКИ --- */
+        #stats-modal .modal-content {
+            max-height: 90vh;
+        }
+        #stats-content {
+            overflow-y: auto;
+            padding-right: 10px; /* for scrollbar */
+        }
         #stats-content .stat-card {
             background-color: var(--bg-color);
             border-radius: 12px;
@@ -515,7 +527,7 @@
         }
         #stats-content .stat-card-score {
             font-weight: 900;
-            font-size: 2rem;
+            font-size: 1.8rem;
             color: var(--primary-grad-start);
         }
 
@@ -617,8 +629,8 @@
     </div>
 
     <div id="stats-modal" class="modal">
-        <div class="modal-content" id="stats-content">
-            <!-- Статистика будет заполнена JS -->
+        <div class="modal-content">
+            <div id="stats-content"></div>
         </div>
     </div>
 
@@ -643,7 +655,7 @@
             <div id="tab-bomb" class="tab-content">
                 <p>Периодически на поле появляются бомбы с таймером. Уберите бомбу, собрав линию, в которой она находится, иначе она взорвется!</p>
                 <div class="rules-illustration">
-                    <div class="illustration-bomb">10</div>
+                    <div id="illustration-bomb-dynamic" class="illustration-bomb">10</div>
                 </div>
             </div>
             <div id="tab-expanded" class="tab-content">
@@ -1271,8 +1283,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         grid.innerHTML = '';
         Object.keys(BLOCKS.expanded).forEach(key => {
             const pieceData = BLOCKS.expanded[key];
+            const wrapper = document.createElement('div');
+            wrapper.className = 'piece-wrapper';
             const pieceEl = createPieceElement(pieceData.s[0], pieceData.c, `rule-${key}`);
-            grid.appendChild(pieceEl);
+            wrapper.appendChild(pieceEl);
+            grid.appendChild(wrapper);
         });
     }
 
