@@ -924,6 +924,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getCoordsFromEvent(e) { return e.touches ? e.touches[0] : e; }
 
     function onDragStart(e) {
+        if (draggedPieceInfo) return; // Защита от случайного начала нового перетаскивания
+
         const pieceCellEl = e.target.closest('.piece-cell');
         if (!pieceCellEl) return;
         
@@ -938,7 +940,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             c: parseInt(pieceCellEl.dataset.c, 10)
         };
 
-        e.preventDefault(); // Предотвращаем стандартное поведение для мыши и тача
+        e.preventDefault();
         
         floatingPiece = draggedPieceInfo.element.cloneNode(true);
         floatingPieceContainer.appendChild(floatingPiece);
@@ -952,6 +954,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         onDragMove(e);
         draggedPieceInfo.element.style.opacity = '0.3';
+
+        // Динамически добавляем слушатели на все окно
+        if (e.type === 'mousedown') {
+            window.addEventListener('mousemove', onDragMove);
+            window.addEventListener('mouseup', onDragEnd, { once: true }); // { once: true } автоматически удалит слушатель после срабатывания
+        } else { // touchstart
+            window.addEventListener('touchmove', onDragMove, { passive: false });
+            window.addEventListener('touchend', onDragEnd, { once: true });
+        }
     }
 
     function onDragMove(e) {
@@ -976,9 +987,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function onDragEnd(e) {
+        // Удаляем слушатели с окна, чтобы они не работали без надобности
+        window.removeEventListener('mousemove', onDragMove);
+        window.removeEventListener('touchmove', onDragMove);
+
         if (!draggedPieceInfo) return;
         
-        const coords = e.changedTouches ? e.changedTouches[0] : e;
+        const coords = e.changedTouches ? e.changedTouches[0] : getCoordsFromEvent(e);
         
         const shadowCheckX = coords.clientX;
         const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
@@ -995,11 +1010,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (floatingPiece) {
             floatingPieceContainer.innerHTML = '';
             floatingPiece = null;
+        }
+        // Возвращаем исходной фигуре нормальную прозрачность, если она еще существует
+        if (draggedPieceInfo.element.parentElement) {
             draggedPieceInfo.element.style.opacity = '1';
         }
 
         clearPreview();
-        draggedPieceInfo = null;
+        draggedPieceInfo = null; // Сбрасываем состояние
     }
 
     function getGridCoordsFromScreen(screenX, screenY) {
@@ -1333,13 +1351,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         
         // --- УНИФИЦИРОВАННЫЙ DRAG & DROP ---
-        document.addEventListener('mousedown', onDragStart);
-        document.addEventListener('mousemove', onDragMove);
-        document.addEventListener('mouseup', onDragEnd);
-        
-        document.addEventListener('touchstart', onDragStart, { passive: false });
-        document.addEventListener('touchmove', onDragMove, { passive: false });
-        document.addEventListener('touchend', onDragEnd);
+        piecesContainer.addEventListener('mousedown', onDragStart);
+        piecesContainer.addEventListener('touchstart', onDragStart, { passive: false });
 
         // Блокировка контекстного меню
         document.addEventListener('contextmenu', e => e.preventDefault());
