@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Блок Про</title>
+    <title>Блок Про (Исправлено)</title>
     <!-- VK Bridge -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -927,14 +927,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return pieceElement;
     }
 
-    // --- УЛУЧШЕННЫЙ Drag & Drop и Touch ---
+    // --- ИСПРАВЛЕННЫЙ Drag & Drop и Touch ---
     let draggedPieceInfo = null;
     let floatingPiece = null;
     
     function getCoordsFromEvent(e) { return e.touches ? e.touches[0] : e; }
 
     function onDragStart(e) {
-        if (draggedPieceInfo) return; // Защита от случайного начала нового перетаскивания
+        // Защита от случайного начала нового перетаскивания, если старое не завершилось
+        if (draggedPieceInfo) return; 
 
         const pieceCellEl = e.target.closest('.piece-cell');
         if (!pieceCellEl) return;
@@ -965,13 +966,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         onDragMove(e);
         draggedPieceInfo.element.style.opacity = '0.3';
 
-        // Динамически добавляем слушатели на все окно
+        // **ИСПРАВЛЕНИЕ:** Явно добавляем слушатели на все окно.
         if (e.type === 'mousedown') {
             window.addEventListener('mousemove', onDragMove);
-            window.addEventListener('mouseup', onDragEnd, { once: true }); 
+            window.addEventListener('mouseup', onDragEnd); 
         } else { // touchstart
             window.addEventListener('touchmove', onDragMove, { passive: false });
-            window.addEventListener('touchend', onDragEnd, { once: true });
+            window.addEventListener('touchend', onDragEnd);
         }
     }
 
@@ -997,37 +998,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function onDragEnd(e) {
-        // Удаляем слушатели с окна, чтобы они не работали без надобности
+        // **ИСПРАВЛЕНИЕ:** Явно удаляем все слушатели, добавленные в onDragStart.
         window.removeEventListener('mousemove', onDragMove);
         window.removeEventListener('touchmove', onDragMove);
+        window.removeEventListener('mouseup', onDragEnd);
+        window.removeEventListener('touchend', onDragEnd);
 
         if (!draggedPieceInfo) return;
         
-        const coords = e.changedTouches ? e.changedTouches[0] : getCoordsFromEvent(e);
-        
-        const shadowCheckX = coords.clientX;
-        const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
-        
-        const { row, col } = getGridCoordsFromScreen(shadowCheckX, shadowCheckY);
-        
-        const finalRow = row - draggedPieceInfo.touchOffset.r;
-        const finalCol = col - draggedPieceInfo.touchOffset.c;
+        // **КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ:** Оборачиваем логику в try...finally,
+        // чтобы гарантировать очистку состояния `draggedPieceInfo` в любом случае.
+        try {
+            const coords = e.changedTouches ? e.changedTouches[0] : e;
+            const shadowCheckX = coords.clientX;
+            const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
+            
+            const { row, col } = getGridCoordsFromScreen(shadowCheckX, shadowCheckY);
+            
+            const finalRow = row - draggedPieceInfo.touchOffset.r;
+            const finalCol = col - draggedPieceInfo.touchOffset.c;
 
-        if (row !== -1 && col !== -1) {
-            placePiece(finalRow, finalCol, draggedPieceInfo);
-        }
-        
-        if (floatingPiece) {
-            floatingPieceContainer.innerHTML = '';
-            floatingPiece = null;
-        }
-        // Возвращаем исходной фигуре нормальную прозрачность, если она еще существует
-        if (draggedPieceInfo.element.parentElement) {
-            draggedPieceInfo.element.style.opacity = '1';
-        }
+            if (row !== -1 && col !== -1) {
+                placePiece(finalRow, finalCol, draggedPieceInfo);
+            }
+        } finally {
+            // Этот блок выполнится всегда, даже если в 'try' произойдет ошибка.
+            if (floatingPiece) {
+                floatingPieceContainer.innerHTML = '';
+                floatingPiece = null;
+            }
+            // Возвращаем исходной фигуре нормальную прозрачность, если она еще существует
+            if (draggedPieceInfo && draggedPieceInfo.element.parentElement) {
+                draggedPieceInfo.element.style.opacity = '1';
+            }
 
-        clearPreview();
-        draggedPieceInfo = null; // Сбрасываем состояние
+            clearPreview();
+            // Самое важное: сбрасываем состояние, чтобы можно было перетаскивать другие фигуры.
+            draggedPieceInfo = null;
+        }
     }
 
     function getGridCoordsFromScreen(screenX, screenY) {
@@ -1380,3 +1388,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 </body>
 </html>
+
