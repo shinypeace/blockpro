@@ -64,6 +64,8 @@
             --c5: #8965e0; /* Фиолетовый */
             --c6: #ffd600; /* Желтый */
             --c7: #11cdef; /* Голубой */
+            --c8: #32325d; /* Темно-синий */
+            --c9: #ff2d55; /* Розовый */
         }
 
         *, *::before, *::after {
@@ -680,8 +682,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             '1x5': { s: [[[1, 1, 1, 1, 1]], [[1], [1], [1], [1], [1]]], c: 'var(--c5)' },
             '2x2': { s: [[[1, 1], [1, 1]]], c: 'var(--c6)' }, 
             '3x3': { s: [[[1, 1, 1], [1, 1, 1], [1, 1, 1]]], c: 'var(--c7)' },
-            'L3':  { s: [[[1, 0], [1, 1]], [[1, 1], [1, 0]], [[1, 1], [0, 1]], [[0, 1], [1, 1]]], c: 'var(--c5)' },
-            'L5':  { s: [[[1,0,0],[1,0,0],[1,1,1]],[[1,1,1],[1,0,0],[1,0,0]],[[1,1,1],[0,0,1],[0,0,1]],[[0,0,1],[0,0,1],[1,1,1]],[[1,1,1,1],[1,0,0,0]],[[1,1,1,1],[0,0,0,1]],[[1,0],[1,0],[1,0],[1,1]],[[0,1],[0,1],[0,1],[1,1]]], c: 'var(--c1)' },
+            'L3':  { s: [[[1, 0], [1, 1]], [[1, 1], [1, 0]], [[1, 1], [0, 1]], [[0, 1], [1, 1]]], c: 'var(--c8)' },
+            'L5':  { s: [[[1,0,0],[1,0,0],[1,1,1]],[[1,1,1],[1,0,0],[1,0,0]],[[1,1,1],[0,0,1],[0,0,1]],[[0,0,1],[0,0,1],[1,1,1]],[[1,1,1,1],[1,0,0,0]],[[1,1,1,1],[0,0,0,1]],[[1,0],[1,0],[1,0],[1,1]],[[0,1],[0,1],[0,1],[1,1]]], c: 'var(--c9)' },
         },
         expanded: {
             '2x3':   { s: [[[1,1,1],[1,1,1]]], c: 'var(--c2)' },
@@ -769,7 +771,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         generateNewPieces();
         updatePiecesAvailability();
         setTimeout(() => { gridRect = gridEl.getBoundingClientRect(); }, 100);
-        vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
+        try {
+            vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' });
+        } catch(e) {
+            console.error("Banner Ad Error:", e);
+        }
     }
     
     function confirmEndGame(reason = '') {
@@ -793,7 +799,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Показ межстраничной рекламы
         gameState.gamesPlayedSinceAd++;
-        if (gameState.gamesPlayedSinceAd >= 3) {
+        if (gameState.gamesPlayedSinceAd >= 1) { // Теперь после каждой игры
             vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
                 .then(() => gameState.gamesPlayedSinceAd = 0)
                 .catch(e => console.error(e));
@@ -846,7 +852,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('main-menu').style.display = 'flex';
         document.getElementById('game-screen').style.display = 'none';
         closeAllModals();
-        vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
+        try {
+            vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' });
+        } catch(e) {
+            console.error("Banner Ad Error:", e);
+        }
     }
 
     function pauseGame(showModal = true) {
@@ -958,7 +968,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Динамически добавляем слушатели на все окно
         if (e.type === 'mousedown') {
             window.addEventListener('mousemove', onDragMove);
-            window.addEventListener('mouseup', onDragEnd, { once: true }); // { once: true } автоматически удалит слушатель после срабатывания
+            window.addEventListener('mouseup', onDragEnd, { once: true }); 
         } else { // touchstart
             window.addEventListener('touchmove', onDragMove, { passive: false });
             window.addEventListener('touchend', onDragEnd, { once: true });
