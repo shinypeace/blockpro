@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Блок Про (Pro-Тень)</title>
+    <title>Блок Про (Финальная версия)</title>
     <!-- VK Bridge -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -410,8 +410,8 @@
         }
         #floating-piece-container .piece {
             position: absolute;
-            transform-origin: center center; /* Возвращаем центрирование для масштаба */
-            transform: scale(1.5); /* Увеличиваем для удобства */
+            transform-origin: center center;
+            transform: scale(1.5);
             opacity: 0.8;
             will-change: transform;
         }
@@ -704,7 +704,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // --- Состояние игры ---
     const GRID_SIZE = 8;
-    const FLOATING_PIECE_Y_OFFSET = 60; // Вернули смещение фигуры над пальцем
+    const FLOATING_PIECE_Y_OFFSET = 60;
     let gameState = {
         gridState: [], score: 0, currentPieces: [], gameMode: 'classic',
         isPaused: false, isGameOver: false, stats: {}, reviveUsed: false,
@@ -918,9 +918,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             for (let c = 0; c < cols; c++) {
                 const cell = document.createElement('div');
                 cell.classList.add('piece-cell');
-                // PRO-SHADOW: Добавляем data-атрибуты для определения смещения
-                cell.dataset.r = r;
-                cell.dataset.c = c;
                 if (shape[r][c] === 1) {
                     cell.classList.add('filled');
                     cell.style.backgroundColor = color;
@@ -931,7 +928,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return pieceElement;
     }
 
-    // --- PRO-LEVEL Drag & Drop ---
+    // --- Улучшенный Drag & Drop ---
     let draggedPieceInfo = null;
     let floatingPiece = null;
     
@@ -940,10 +937,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function onDragStart(e) {
         if (draggedPieceInfo) return; 
 
-        const pieceCellEl = e.target.closest('.piece-cell');
-        if (!pieceCellEl) return;
-        
-        const pieceEl = pieceCellEl.closest('.piece');
+        // УЛУЧШЕНИЕ: Целимся в весь элемент фигуры, а не в отдельную ячейку
+        const pieceEl = e.target.closest('.piece');
         if (!pieceEl || pieceEl.classList.contains('disabled')) return;
         
         draggedPieceInfo = gameState.currentPieces.find(p => p.id === pieceEl.id);
@@ -951,20 +946,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         e.preventDefault();
 
-        // PRO-SHADOW: Запоминаем, за какую ячейку внутри фигуры мы схватились
+        const pieceRect = pieceEl.getBoundingClientRect();
+        const coords = getCoordsFromEvent(e);
+
+        // УЛУЧШЕНИЕ: Рассчитываем, на какую "виртуальную" ячейку пришелся клик
+        const relativeX = coords.clientX - pieceRect.left;
+        const relativeY = coords.clientY - pieceRect.top;
+
+        const pieceCols = draggedPieceInfo.shape[0].length;
+        const pieceRows = draggedPieceInfo.shape.length;
+
+        const cellWidth = pieceRect.width / pieceCols;
+        const cellHeight = pieceRect.height / pieceRows;
+
+        const touchedRow = Math.floor(relativeY / cellHeight);
+        const touchedCol = Math.floor(relativeX / cellWidth);
+
+        // Проверяем, что клик пришелся на заполненную часть фигуры
+        if (!draggedPieceInfo.shape[touchedRow] || draggedPieceInfo.shape[touchedRow][touchedCol] === 0) {
+            draggedPieceInfo = null; // Сбрасываем, если клик был по пустой части
+            return;
+        }
+
         draggedPieceInfo.touchOffset = {
-            r: parseInt(pieceCellEl.dataset.r, 10),
-            c: parseInt(pieceCellEl.dataset.c, 10)
+            r: touchedRow,
+            c: touchedCol
         };
         
         floatingPiece = draggedPieceInfo.element.cloneNode(true);
         floatingPieceContainer.appendChild(floatingPiece);
         
-        const pieceRect = draggedPieceInfo.element.getBoundingClientRect();
-        const floatingPieceWidth = pieceRect.width / draggedPieceInfo.shape[0].length;
-        const floatingPieceHeight = pieceRect.height / draggedPieceInfo.shape.length;
+        const floatingPieceWidth = pieceRect.width / pieceCols;
+        const floatingPieceHeight = pieceRect.height / pieceRows;
 
-        // PRO-SHADOW: Позиционируем плавающую фигуру с учетом смещения над пальцем
         floatingPiece.style.left = `-${(draggedPieceInfo.touchOffset.c + 0.5) * floatingPieceWidth}px`;
         floatingPiece.style.top = `-${(draggedPieceInfo.touchOffset.r + 0.5) * floatingPieceHeight + FLOATING_PIECE_Y_OFFSET}px`;
 
@@ -990,13 +1004,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             floatingPieceContainer.style.transform = `translate(${coords.clientX}px, ${coords.clientY}px)`;
         }
         
-        // PRO-SHADOW: Точка для проверки тени находится там же, где и видимая плавающая фигура
         const shadowCheckX = coords.clientX;
         const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
 
         const { row: anchorRow, col: anchorCol } = getGridCoordsFromScreen(shadowCheckX, shadowCheckY);
         
-        // PRO-SHADOW: Рассчитываем позицию тени на основе ячейки под курсором и смещения хвата
         const previewRow = anchorRow - draggedPieceInfo.touchOffset.r;
         const previewCol = anchorCol - draggedPieceInfo.touchOffset.c;
 
@@ -1014,7 +1026,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const coords = e.changedTouches ? e.changedTouches[0] : e;
             
-            // PRO-SHADOW: Логика установки фигуры идентична логике отрисовки тени
             const shadowCheckX = coords.clientX;
             const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
             
@@ -1038,19 +1049,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // PRO-SHADOW: Ключевая функция. Всегда возвращает ячейку, даже на границах.
     function getGridCoordsFromScreen(screenX, screenY) {
-        if (!gridRect) return { row: 0, col: 0 }; // Возвращаем 0,0 если поле еще не определено
+        if (!gridRect) return { row: 0, col: 0 };
         
-        // Получаем позицию относительно поля
         let x = screenX - gridRect.left;
         let y = screenY - gridRect.top;
 
-        // Прижимаем координаты к границам поля, если курсор вышел за них
         x = Math.max(0, Math.min(x, gridRect.width - 1));
         y = Math.max(0, Math.min(y, gridRect.height - 1));
 
-        // Вычисляем ячейку
         const col = Math.floor(x / (gridRect.width / GRID_SIZE));
         const row = Math.floor(y / (gridRect.height / GRID_SIZE));
 
