@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Блок Про (Улучшено)</title>
+    <title>Блок Про (Pro-Тень)</title>
     <!-- VK Bridge -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -410,7 +410,7 @@
         }
         #floating-piece-container .piece {
             position: absolute;
-            transform-origin: top left; /* УЛУЧШЕНИЕ: точка трансформации в углу */
+            transform-origin: center center; /* Возвращаем центрирование для масштаба */
             transform: scale(1.5); /* Увеличиваем для удобства */
             opacity: 0.8;
             will-change: transform;
@@ -704,6 +704,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // --- Состояние игры ---
     const GRID_SIZE = 8;
+    const FLOATING_PIECE_Y_OFFSET = 60; // Вернули смещение фигуры над пальцем
     let gameState = {
         gridState: [], score: 0, currentPieces: [], gameMode: 'classic',
         isPaused: false, isGameOver: false, stats: {}, reviveUsed: false,
@@ -723,7 +724,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             gameState.vkUserId = localStorage.getItem('blockPuzzleGuestId') || `guest_${Date.now()}`;
             localStorage.setItem('blockPuzzleGuestId', gameState.vkUserId);
         }
-        await loadStats(); // Загружаем статистику после получения ID
+        await loadStats(); 
         showMainMenu();
     }
     
@@ -733,7 +734,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         createGrid();
         setupTheme();
         populateExpandedRules();
-        await initVK(); // Запускаем инициализацию VK
+        await initVK(); 
     }
     
     function createGrid() {
@@ -796,7 +797,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('final-score').textContent = gameState.score;
         document.getElementById('game-over-modal').classList.add('active');
         
-        // --- УЛУЧШЕНИЕ: Показ межстраничной рекламы каждые 2 игры ---
         gameState.gamesPlayedSinceAd++;
         if (gameState.gamesPlayedSinceAd >= 2) { 
             vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
@@ -836,7 +836,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     gameState.isGameOver = false;
                     if (gameState.gameMode === 'time') {
-                        gameState.timeRemaining = Math.max(gameState.timeRemaining, 50); // Даем время
+                        gameState.timeRemaining = Math.max(gameState.timeRemaining, 50);
                         runTimer();
                     }
                     postTurnLogic();
@@ -918,6 +918,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             for (let c = 0; c < cols; c++) {
                 const cell = document.createElement('div');
                 cell.classList.add('piece-cell');
+                // PRO-SHADOW: Добавляем data-атрибуты для определения смещения
+                cell.dataset.r = r;
+                cell.dataset.c = c;
                 if (shape[r][c] === 1) {
                     cell.classList.add('filled');
                     cell.style.backgroundColor = color;
@@ -928,7 +931,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return pieceElement;
     }
 
-    // --- УЛУЧШЕННЫЙ Drag & Drop и Touch ---
+    // --- PRO-LEVEL Drag & Drop ---
     let draggedPieceInfo = null;
     let floatingPiece = null;
     
@@ -937,7 +940,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     function onDragStart(e) {
         if (draggedPieceInfo) return; 
 
-        const pieceEl = e.target.closest('.piece');
+        const pieceCellEl = e.target.closest('.piece-cell');
+        if (!pieceCellEl) return;
+        
+        const pieceEl = pieceCellEl.closest('.piece');
         if (!pieceEl || pieceEl.classList.contains('disabled')) return;
         
         draggedPieceInfo = gameState.currentPieces.find(p => p.id === pieceEl.id);
@@ -945,21 +951,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         e.preventDefault();
 
-        const coords = getCoordsFromEvent(e);
-        const pieceRect = pieceEl.getBoundingClientRect();
-
-        // УЛУЧШЕНИЕ: Вычисляем точное смещение клика внутри элемента фигуры
-        draggedPieceInfo.clickOffset = {
-            x: coords.clientX - pieceRect.left,
-            y: coords.clientY - pieceRect.top
+        // PRO-SHADOW: Запоминаем, за какую ячейку внутри фигуры мы схватились
+        draggedPieceInfo.touchOffset = {
+            r: parseInt(pieceCellEl.dataset.r, 10),
+            c: parseInt(pieceCellEl.dataset.c, 10)
         };
         
         floatingPiece = draggedPieceInfo.element.cloneNode(true);
         floatingPieceContainer.appendChild(floatingPiece);
         
-        // УЛУЧШЕНИЕ: Позиционируем "плавающую" фигуру так, чтобы точка клика была под курсором
-        floatingPiece.style.left = `-${draggedPieceInfo.clickOffset.x}px`;
-        floatingPiece.style.top = `-${draggedPieceInfo.clickOffset.y}px`;
+        const pieceRect = draggedPieceInfo.element.getBoundingClientRect();
+        const floatingPieceWidth = pieceRect.width / draggedPieceInfo.shape[0].length;
+        const floatingPieceHeight = pieceRect.height / draggedPieceInfo.shape.length;
+
+        // PRO-SHADOW: Позиционируем плавающую фигуру с учетом смещения над пальцем
+        floatingPiece.style.left = `-${(draggedPieceInfo.touchOffset.c + 0.5) * floatingPieceWidth}px`;
+        floatingPiece.style.top = `-${(draggedPieceInfo.touchOffset.r + 0.5) * floatingPieceHeight + FLOATING_PIECE_Y_OFFSET}px`;
 
         onDragMove(e);
         draggedPieceInfo.element.style.opacity = '0.3';
@@ -979,18 +986,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const coords = getCoordsFromEvent(e);
         
-        // УЛУЧШЕНИЕ: Контейнер плавающей фигуры следует точно за курсором
         if (floatingPiece) {
             floatingPieceContainer.style.transform = `translate(${coords.clientX}px, ${coords.clientY}px)`;
         }
         
-        // УЛУЧШЕНИЕ: Рассчитываем позицию для тени от верхнего левого угла фигуры
-        const shapeTopLeftX = coords.clientX - draggedPieceInfo.clickOffset.x;
-        const shapeTopLeftY = coords.clientY - draggedPieceInfo.clickOffset.y;
+        // PRO-SHADOW: Точка для проверки тени находится там же, где и видимая плавающая фигура
+        const shadowCheckX = coords.clientX;
+        const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
 
-        const { row, col } = getGridCoordsFromScreen(shapeTopLeftX, shapeTopLeftY);
+        const { row: anchorRow, col: anchorCol } = getGridCoordsFromScreen(shadowCheckX, shadowCheckY);
         
-        drawPreview(row, col, draggedPieceInfo.shape, draggedPieceInfo.color);
+        // PRO-SHADOW: Рассчитываем позицию тени на основе ячейки под курсором и смещения хвата
+        const previewRow = anchorRow - draggedPieceInfo.touchOffset.r;
+        const previewCol = anchorCol - draggedPieceInfo.touchOffset.c;
+
+        drawPreview(previewRow, previewCol, draggedPieceInfo.shape, draggedPieceInfo.color);
     }
 
     function onDragEnd(e) {
@@ -1004,15 +1014,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const coords = e.changedTouches ? e.changedTouches[0] : e;
             
-            // УЛУЧШЕНИЕ: Финальная позиция рассчитывается так же, как и тень
-            const shapeTopLeftX = coords.clientX - draggedPieceInfo.clickOffset.x;
-            const shapeTopLeftY = coords.clientY - draggedPieceInfo.clickOffset.y;
+            // PRO-SHADOW: Логика установки фигуры идентична логике отрисовки тени
+            const shadowCheckX = coords.clientX;
+            const shadowCheckY = coords.clientY - FLOATING_PIECE_Y_OFFSET;
             
-            const { row, col } = getGridCoordsFromScreen(shapeTopLeftX, shapeTopLeftY);
+            const { row: anchorRow, col: anchorCol } = getGridCoordsFromScreen(shadowCheckX, shadowCheckY);
             
-            if (row !== -1 && col !== -1) {
-                placePiece(row, col, draggedPieceInfo);
-            }
+            const finalRow = anchorRow - draggedPieceInfo.touchOffset.r;
+            const finalCol = anchorCol - draggedPieceInfo.touchOffset.c;
+            
+            placePiece(finalRow, finalCol, draggedPieceInfo);
+
         } finally {
             if (floatingPiece) {
                 floatingPieceContainer.innerHTML = '';
@@ -1026,17 +1038,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // УЛУЧШЕНИЕ: Функция теперь возвращает -1, если курсор за пределами поля
+    // PRO-SHADOW: Ключевая функция. Всегда возвращает ячейку, даже на границах.
     function getGridCoordsFromScreen(screenX, screenY) {
-        if (!gridRect) return { row: -1, col: -1 };
+        if (!gridRect) return { row: 0, col: 0 }; // Возвращаем 0,0 если поле еще не определено
         
-        if (screenX < gridRect.left || screenX > gridRect.right || screenY < gridRect.top || screenY > gridRect.bottom) {
-            return { row: -1, col: -1 };
-        }
+        // Получаем позицию относительно поля
+        let x = screenX - gridRect.left;
+        let y = screenY - gridRect.top;
 
-        const x = screenX - gridRect.left;
-        const y = screenY - gridRect.top;
+        // Прижимаем координаты к границам поля, если курсор вышел за них
+        x = Math.max(0, Math.min(x, gridRect.width - 1));
+        y = Math.max(0, Math.min(y, gridRect.height - 1));
 
+        // Вычисляем ячейку
         const col = Math.floor(x / (gridRect.width / GRID_SIZE));
         const row = Math.floor(y / (gridRect.height / GRID_SIZE));
 
@@ -1226,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 clearInterval(gameState.timerId);
                 return;
             }
-            gameState.timeRemaining -= 0.1; // Замедленный таймер
+            gameState.timeRemaining -= 0.1; 
             document.getElementById('time-bar').style.width = gameState.timeRemaining + '%';
             if (gameState.timeRemaining <= 0) {
                 clearInterval(gameState.timerId);
