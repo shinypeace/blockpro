@@ -890,9 +890,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const randomShapeIndex = Math.floor(Math.random() * pieceData.s.length);
             const shape = pieceData.s[randomShapeIndex];
             
+            // --- ИСПРАВЛЕНИЕ: Генерируем ID один раз, чтобы избежать рассинхронизации ---
+            const pieceId = `p${Date.now()}${i}`;
+            
             const pieceInfo = {
-                id: `p${Date.now()}${i}`, shape: shape, color: pieceData.c,
-                element: createPieceElement(shape, pieceData.c, `p${Date.now()}${i}`),
+                id: pieceId, // Используем один и тот же ID
+                shape: shape, 
+                color: pieceData.c,
+                element: createPieceElement(shape, pieceData.c, pieceId), // и здесь
                 size: shape.flat().reduce((a, b) => a + b, 0)
             };
             
